@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.config import settings
 from src.database import get_db 
 
-
+from src.dependencies.repository import get_user_repository
+from src.repositories.user import UserRepository
 
 
 # We'll add more imports later (routers, middleware, exception handlers, etc.)
@@ -55,3 +56,8 @@ async def test_database(db: AsyncSession = Depends(get_db)):
     """
     result = await db.execute(text("SELECT 'pong' AS status"))
     return {"db_status": result.scalar_one()}
+
+@app.get("/test-repo")
+async def test_repository(repo: UserRepository = Depends(get_user_repository)):
+    # Just to prove injection works — returns empty list for now
+    return {"message": "Repository injected successfully"}
