@@ -8,6 +8,10 @@ from src.database import get_db
 
 from src.dependencies.repository import get_user_repository
 from src.repositories.user import UserRepository
+from src.dependencies.auth import get_current_user
+from src.models.user import User 
+from src.api.v1.routers import auth
+
 
 
 # We'll add more imports later (routers, middleware, exception handlers, etc.)
@@ -25,6 +29,8 @@ app = FastAPI(
     openapi_url="/openapi.json" if settings.environment != "production" else None,
 )
 
+
+app.include_router(auth.router, prefix=settings.api_v1_str)
 
 @app.get("/health", summary="Health check endpoint")
 async def health_check():
@@ -61,3 +67,7 @@ async def test_database(db: AsyncSession = Depends(get_db)):
 async def test_repository(repo: UserRepository = Depends(get_user_repository)):
     # Just to prove injection works — returns empty list for now
     return {"message": "Repository injected successfully"}
+
+@app.get("/test-auth", response_model_exclude={"password_hash"})
+async def test_auth(current_user: User = Depends(get_current_user)):
+    return current_user 

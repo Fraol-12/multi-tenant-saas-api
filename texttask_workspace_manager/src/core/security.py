@@ -13,8 +13,7 @@ from src.config import settings
 
 
 # Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against its hash."""
@@ -23,7 +22,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     """Generate secure hash from plain password."""
-    return pwd_context.hash(password)
+    # Bcrypt hard limit = 72 bytes (not characters!)
+    # We truncate early and explicitly so the error is predictable
+    password_bytes = password.encode("utf-8")
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+    truncated_password = password_bytes.decode("utf-8", errors="ignore")
+    
+    return pwd_context.hash(truncated_password)
 
 
 # JWT
