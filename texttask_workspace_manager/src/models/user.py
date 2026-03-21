@@ -2,8 +2,9 @@
 from typing import Optional
 
 from sqlalchemy import String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
+from .membership import Membership
 
 from .base import Base
 
@@ -36,3 +37,7 @@ class User(Base):
         DateTime(timezone=True),
         nullable=True,
     )
+
+    memberships: Mapped[list[Membership]] = relationship(
+    back_populates="user", cascade="all, delete-orphan"
+)
