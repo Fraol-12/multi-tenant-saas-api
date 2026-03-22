@@ -2,8 +2,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 
-from src.core.security import get_current_user
+from src.dependencies.auth import get_current_user   
+
 from src.dependencies.workspace import get_current_workspace, require_admin
+
 from src.models.user import User
 from src.models.workspace import Workspace
 from src.repositories.workspace import WorkspaceRepository
@@ -12,7 +14,7 @@ from src.schemas.workspace import (
     WorkspaceRead,
     WorkspaceUpdate,
 )
-from src.dependencies.repository import get_workspace_repository
+from src.dependencies.workspace import get_workspace_repository
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
 
@@ -33,29 +35,28 @@ async def create_workspace(
     current_user: User = Depends(get_current_user),
     workspace_repo: WorkspaceRepository = Depends(get_workspace_repository),
 ):
-    """Create a new workspace and make current user Admin."""
     workspace = await workspace_repo.create(
         name=workspace_in.name,
         description=workspace_in.description,
         creator_id=current_user.id,
     )
-    await workspace_repo.session.flush()  # get ID
 
-    # Auto-add creator as Admin
     await workspace_repo.add_membership(
         user_id=current_user.id,
         workspace_id=workspace.id,
         role="admin",
     )
 
+    await workspace_repo.session.commit()      # ← explicit commit
+
     return workspace
 
 
 @router.get("/{workspace_id}", response_model=WorkspaceRead)
 async def get_workspace(
-    workspace: Workspace = Depends(get_current_workspace),
+    workspace_id: int,  # ← path param here
+    workspace: Workspace = Depends(get_current_workspace),  # ← dependency receives it
 ):
-    """Get details of a specific workspace (must be member)."""
     return workspace
 
 

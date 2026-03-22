@@ -21,26 +21,19 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def get_password_hash(password: str) -> str:
-    """Generate secure hash from plain password."""
-    # Bcrypt hard limit = 72 bytes (not characters!)
-    # We truncate early and explicitly so the error is predictable
-    password_bytes = password.encode("utf-8")
-    if len(password_bytes) > 72:
-        password_bytes = password_bytes[:72]
-    truncated_password = password_bytes.decode("utf-8", errors="ignore")
-    
-    return pwd_context.hash(truncated_password)
+    return pwd_context.hash(password)
 
 
 # JWT
 ALGORITHM = "HS256"
 
 
+# src/core/security.py – add optional workspace_id param
 def create_access_token(
     subject: str | Any,
+    workspace_id: int | None = None,
     expires_delta: timedelta | None = None,
-) -> str:
-    """Create JWT access token with expiration."""
+ ) -> str:
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
@@ -49,6 +42,9 @@ def create_access_token(
         )
 
     to_encode = {"exp": expire, "sub": str(subject)}
+    if workspace_id is not None:
+        to_encode["wid"] = workspace_id  # workspace ID claim
+
     encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=ALGORITHM)
     return encoded_jwt
 

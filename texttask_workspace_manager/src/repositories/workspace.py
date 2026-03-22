@@ -1,7 +1,7 @@
 
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.membership import Membership
@@ -54,4 +54,4 @@ class WorkspaceRepository:
     async def delete(self, workspace_id: int):
         stmt = delete(Workspace).where(Workspace.id == workspace_id)
         await self.session.execute(stmt)
-        await self.session.flush()    
+        await self.session.commit()   

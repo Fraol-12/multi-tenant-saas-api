@@ -11,7 +11,7 @@ from src.repositories.user import UserRepository
 from src.dependencies.auth import get_current_user
 from src.models.user import User 
 from src.api.v1.routers import auth
-
+from src.api.v1.routers import auth, workspace
 
 
 # We'll add more imports later (routers, middleware, exception handlers, etc.)
@@ -31,6 +31,10 @@ app = FastAPI(
 
 
 app.include_router(auth.router, prefix=settings.api_v1_str)
+
+app.include_router(workspace.router, prefix=settings.api_v1_str)
+
+
 
 @app.get("/health", summary="Health check endpoint")
 async def health_check():
